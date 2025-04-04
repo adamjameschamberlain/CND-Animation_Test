@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cloud Nester - Final Revision</title>
+  <style>
+    /* Base Color Scheme: Purple (#532D8A, #3C2A4D) & Orange (#F29200) with light accents */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fff;
+      color: #000;
+      padding: 1rem;
+      line-height: 1.4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      color: #532D8A;
+    }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .control-group label {
+      font-weight: bold;
+    }
+    input[type="range"] {
+      vertical-align: middle;
+    }
+    button {
+      background: #532D8A;
+      color: #fff;
+      border: 2px solid #F29200;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #6a3da7;
+    }
+    
+    /* Flow and Pipeline Layout */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .pipeline {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 1rem;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      overflow-x: auto;
+    }
+    .arrow {
+      font-size: 2rem;
+      color: #532D8A;
+    }
+    
+    /* Workflow Stage */
+    .workflow-stage {
+      background: #3C2A4D;
+      border: 2px solid #F29200;
+      border-radius: 8px;
+      width: 180px;
+      min-height: 160px;
+      padding: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .workflow-stage h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      color: #F29200;
+      text-align: center;
+    }
+    .workflow-part {
+      width: 28px;
+      height: 28px;
+      background: #F29200;
+      color: #532D8A;
+      border: 2px solid #555;
+      border-radius: 4px;
+      margin: 0.25rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.85rem;
+      position: relative;
+    }
+    .progress {
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      height: 4px;
+      background: #fff;
+      width: 0%;
+      border-radius: 2px;
+    }
+    
+    /* Nest Queues Container */
+    .nest-queues-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .nest-queues {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .nest-queue {
+      background: #3C2A4D;
+      border: 2px solid #F29200;
+      border-radius: 8px;
+      width: 240px;
+      min-height: 160px;
+      padding: 0.5rem;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .nest-queue h3 {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: #F29200;
+    }
+    .queue-wrapper {
+      display: flex;
+      align-items: flex-start;
+    }
+    .bucket-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+    .bucket-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100px;
+    }
+    .bucket-label {
+      margin-bottom: 0.25rem;
+      font-size: 0.8rem;
+      color: #000;
+      text-align: center;
+    }
+    .bucket {
+      position: relative;
+      width: 100px;
+      height: 80px;
+      border: 2px dashed #F29200;
+      background: linear-gradient(to bottom, #532D8A 0%, #3C2A4D 100%);
+      border-radius: 0 0 24px 24px;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.2);
+      overflow: hidden;
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+    .bucket::before {
+      content: "";
+      position: absolute;
+      top: -12px;
+      left: 14px;
+      width: 70px;
+      height: 24px;
+      border: 2px solid #F29200;
+      border-radius: 20px;
+      background: transparent;
+    }
+    .efficiency-bar {
+      margin-top: 0.25rem;
+      width: 100px;
+      height: 6px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .efficiency-fill {
+      height: 6px;
+      background: #F29200;
+      width: 0%;
+      transition: width 0.3s ease-in-out;
+    }
+    .part {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #555;
+      border-radius: 3px;
+      margin: 2px auto 0;
+      background: #F29200;
+      color: #532D8A;
+      font-size: 0.7rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* +/– Buttons Below the Queues */
+    .queue-controls {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    /* RIP */
+    .rip {
+      background: #3C2A4D;
+      border: 2px solid #F29200;
+      border-radius: 8px;
+      width: 200px;
+      min-height: 120px;
+      padding: 0.5rem;
+      box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .rip h3 {
+      font-size: 1rem;
+      color: #F29200;
+      margin-bottom: 0.5rem;
+    }
+    .rip-list {
+      list-style: none;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .rip-list li {
+      background: #532D8A;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #F29200;
+    }
+    
+    /* Printers Container (Vertical Layout) */
+    .printers-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 200px;
+    }
+    .printers {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      width: 120px;
+      margin-bottom: 1rem;
+    }
+    .printer-stage {
+      background: #3C2A4D;
+      border: 2px solid #F29200;
+      border-radius: 8px;
+      width: 120px;
+      min-height: 100px;
+      padding: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+    }
+    .printer-stage h3 {
+      font-size: 0.8rem;
+      color: #F29200;
+      margin: 0.25rem 0;
+    }
+    .printer-icon {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 2px #000);
+    }
+    .printer-progress {
+      margin-top: 0.25rem;
+      width: 80px;
+      height: 6px;
+      background: #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .printer-fill {
+      height: 6px;
+      background: #F29200;
+      width: 0%;
+      transition: width 0.3s ease-in-out;
+    }
+    
+    /* Trigger Tick & Message */
+    .trigger-tick {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 2rem;
+      animation: tickFlash 0.5s ease-in-out;
+      pointer-events: none;
+      z-index: 99;
+      color: green;
+    }
+    .trigger-message {
+      position: absolute;
+      top: 40px;
+      left: 2px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: rgba(255,255,255,0.9);
+      padding: 4px 6px;
+      border-radius: 4px;
+      pointer-events: none;
+      animation: tickFlash 0.5s ease-in-out;
+      z-index: 10000;
+      color: green;
+    }
+    @keyframes tickFlash {
+      0% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    
+    /* Recalculation Overlay */
+    .recalc-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.9);
+      color: #532D8A;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      text-align: center;
+      flex-direction: column;
+    }
+    .hourglass {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+      margin-left: 0.5rem;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Data Flow Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .overlay-content {
+      background: #fff;
+      padding: 2rem;
+      border: 2px solid #F29200;
+      border-radius: 8px;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow-y: auto;
+      color: #000;
+      text-align: center;
+      position: relative;
+    }
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #532D8A;
+      color: #fff;
+      border: 2px solid #F29200;
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      cursor: pointer;
+    }
+    .close-button:hover {
+      background: #6a3da7;
+    }
+    
+    /* Vertical Flow Chart for Data Flow Overlay */
+    .vertical-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    .flow-step {
+      border: 2px solid #F29200;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      background: #f0f0f0;
+      color: #000;
+      width: 80%;
+      text-align: center;
+      font-size: 14px;
+    }
+    .flow-arrow {
+      font-size: 1.5rem;
+      color: #F29200;
+    }
+    
+    /* Printer Controls (placed beneath the printers) */
+    .printer-controls {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cloud Nester</h1>
+  
+  <!-- Help Button for Data Flow Overlay -->
+  <div style="text-align: center; margin-bottom: 1rem;">
+    <button id="seeDataFlowButton">Help</button>
+  </div>
+  
+  <!-- Controls -->
+  <div class="controls">
+    <div class="control-group">
+      <label for="freqSlider">Job Frequency:</label>
+      <!-- Updated minimum value from 500ms (0.5s) to 100ms (0.1s) -->
+      <input type="range" id="freqSlider" min="100" max="5000" step="100" value="2000">
+      <span id="freqLabel">2.0s</span>
+    </div>
+    <div class="control-group">
+      <label for="speedSlider">Animation Speed:</label>
+      <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1">
+      <span id="speedLabel">1.0x</span>
+    </div>
+    <button id="pauseButton">Pause</button>
+  </div>
+  
+  <!-- Pipeline -->
+  <div class="flow-container">
+    <div class="pipeline">
+      <!-- Workflow -->
+      <div class="workflow-stage" id="workflow">
+        <h3>Workflow</h3>
+      </div>
+
+      <div class="arrow">➔</div>
+
+      <!-- Nest Queues Container -->
+      <div class="nest-queues-container">
+        <div class="nest-queues" id="nestQueuesContainer">
+          <!-- Dynamically generated nest queues -->
+        </div>
+        <div class="queue-controls">
+          <button id="addQueueButton">+</button>
+          <button id="removeQueueButton">–</button>
+        </div>
+      </div>
+
+      <div class="arrow">➔</div>
+
+      <!-- RIP -->
+      <div class="rip" id="rip">
+        <h3>RIP</h3>
+        <ul class="rip-list" id="ripList"></ul>
+      </div>
+
+      <div class="arrow">➔</div>
+
+      <!-- Printers in a vertical column -->
+      <div class="printers-container">
+        <div class="printers" id="printers">
+          <div class="printer-stage" id="printer1">
+            <img class="printer-icon" 
+                 src="https://cdn-icons-png.flaticon.com/512/190/190411.png" 
+                 alt="Printer 1">
+            <h3>Printer 1</h3>
+            <div class="printer-progress">
+              <div class="printer-fill" id="printerFill1"></div>
+            </div>
+          </div>
+          <div class="printer-stage" id="printer2">
+            <img class="printer-icon" 
+                 src="https://cdn-icons-png.flaticon.com/512/190/190411.png" 
+                 alt="Printer 2">
+            <h3>Printer 2</h3>
+            <div class="printer-progress">
+              <div class="printer-fill" id="printerFill2"></div>
+            </div>
+          </div>
+          <div class="printer-stage" id="printer3">
+            <img class="printer-icon" 
+                 src="https://cdn-icons-png.flaticon.com/512/190/190411.png" 
+                 alt="Printer 3">
+            <h3>Printer 3</h3>
+            <div class="printer-progress">
+              <div class="printer-fill" id="printerFill3"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Printer Controls beneath the printers -->
+        <div class="printer-controls">
+          <button id="addPrinterButton">+</button>
+          <button id="removePrinterButton">–</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Data Flow Overlay with Vertical Flow Chart -->
+  <div id="dataFlowOverlay" class="overlay" style="display: none;">
+    <div class="overlay-content">
+      <div class="close-button" id="closeOverlay">X</div>
+      <h2>Data Flow Diagram</h2>
+      <div class="vertical-flow">
+        <div class="flow-step">
+          Files are automatically processed by the pre-press module Workflow to prepare them for printing.
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          Processed files are routed to the appropriate nest queues, which contain buckets.
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          Each file is loaded into all buckets (unless specific group IDs are applied). In each bucket, an algorithm continuously optimizes the nest layout until a defined criterion—based on time, efficiency, or item count.
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          The nesting style (e.g., Stack, True Shape, etc.) is determined by a "nesting preset" associated with the nest queue.
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          When a bucket is triggered, the optimized nest is sent to the RIP. Any remaining parts (jobs) are redistributed among the buckets, and the automatic nesting process resumes until the next bucket trigger.
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          Finally, the RIP directs the jobs to the appropriate printers and cutters.
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    /*******************************************************
+     * 1) Core Cloud Nester Logic
+     *******************************************************/
+    let nestQueueCount = 2; // starting with 2 nest queues
+    let queuesData = [];    // each element is an array of buckets for that queue
+    let queueRecalc = [];   // tracks if a given queue is recalculating
+    let pendingParts = [];  // stores letters arriving during recalculation for each queue
+    let recalcOverlayRefs = []; // active recalc overlay DOM references per queue
+
+    // Workflow, RIP setup
+    const workflowEl = document.getElementById('workflow');
+    const ripListEl = document.getElementById('ripList');
+    let ripQueue = [];
+    let jobCounter = 1;
+    
+    // Printers (initially 3). We'll store them dynamically.
+    let printerCount = 3;
+    let printers = [];
+    
+    // Sliders & Pause
+    let jobFrequency = 2000; // default 2 seconds
+    let speedFactor = 1.0;
+    let isPaused = false;
+    const freqSlider  = document.getElementById('freqSlider');
+    const freqLabel   = document.getElementById('freqLabel');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedLabel  = document.getElementById('speedLabel');
+    const pauseButton = document.getElementById('pauseButton');
+    
+    freqSlider.addEventListener('input', () => {
+      jobFrequency = parseInt(freqSlider.value);
+      freqLabel.textContent = (jobFrequency / 1000).toFixed(1) + "s";
+    });
+    speedSlider.addEventListener('input', () => {
+      speedFactor = parseFloat(speedSlider.value);
+      speedLabel.textContent = speedFactor.toFixed(1) + "x";
+    });
+    pauseButton.addEventListener('click', () => {
+      isPaused = !isPaused;
+      pauseButton.textContent = isPaused ? "Resume" : "Pause";
+    });
+    
+    /*******************************************************
+     * 2) Nest Queue UI & Buckets
+     *******************************************************/
+    const addQueueButton = document.getElementById('addQueueButton');
+    const removeQueueButton = document.getElementById('removeQueueButton');
+    addQueueButton.addEventListener('click', () => {
+      nestQueueCount++;
+      queuesData.push([]);
+      queueRecalc.push(false);
+      pendingParts.push([]);
+      recalcOverlayRefs.push(null);
+      createNestQueueDOM(nestQueueCount - 1);
+      initBucketsForQueue(nestQueueCount - 1);
+    });
+    removeQueueButton.addEventListener('click', () => {
+      if(nestQueueCount > 1) {
+        const container = document.getElementById('nestQueuesContainer');
+        const lastQueue = document.getElementById('queue' + nestQueueCount);
+        if(lastQueue) container.removeChild(lastQueue);
+        queuesData.pop();
+        queueRecalc.pop();
+        pendingParts.pop();
+        recalcOverlayRefs.pop();
+        nestQueueCount--;
+      }
+    });
+    
+    function initNestQueues() {
+      const container = document.getElementById('nestQueuesContainer');
+      container.innerHTML = "";
+      queuesData = [];
+      queueRecalc = [];
+      pendingParts = [];
+      recalcOverlayRefs = [];
+      for (let i = 0; i < nestQueueCount; i++) {
+        createNestQueueDOM(i);
+        queuesData.push([]);
+        queueRecalc.push(false);
+        pendingParts.push([]);
+        recalcOverlayRefs.push(null);
+      }
+    }
+    
+    function createNestQueueDOM(index) {
+      const container = document.getElementById('nestQueuesContainer');
+      const nestQueue = document.createElement('div');
+      nestQueue.classList.add('nest-queue');
+      nestQueue.id = "queue" + (index + 1);
+      
+      const header = document.createElement('h3');
+      header.textContent = "Nest Queue " + (index + 1);
+      nestQueue.appendChild(header);
+      
+      const queueWrapper = document.createElement('div');
+      queueWrapper.classList.add('queue-wrapper');
+      
+      const bucketRow = document.createElement('div');
+      bucketRow.classList.add('bucket-row');
+      bucketRow.id = "bucketRow" + (index + 1);
+      
+      queueWrapper.appendChild(bucketRow);
+      nestQueue.appendChild(queueWrapper);
+      container.appendChild(nestQueue);
+    }
+    
+    function createBucket(queueIndex, bucketIndex) {
+      const container = document.createElement('div');
+      container.classList.add('bucket-container');
+      
+      const label = document.createElement('div');
+      label.classList.add('bucket-label');
+      label.textContent = (120 + bucketIndex * 30) + "cm";
+      container.appendChild(label);
+      
+      const bucketEl = document.createElement('div');
+      bucketEl.classList.add('bucket');
+      container.appendChild(bucketEl);
+      
+      const effBar = document.createElement('div');
+      effBar.classList.add('efficiency-bar');
+      const effFill = document.createElement('div');
+      effFill.classList.add('efficiency-fill');
+      effBar.appendChild(effFill);
+      container.appendChild(effBar);
+      
+      const fillFactor = Math.random() * 4 + 4;
+      
+      return { container, el: bucketEl, fill: effFill, efficiency: 0, fillFactor };
+    }
+    function initBuckets() {
+      for (let i = 0; i < nestQueueCount; i++) {
+        initBucketsForQueue(i);
+      }
+    }
+    function initBucketsForQueue(queueIndex) {
+      queuesData[queueIndex] = [];
+      const bucketRow = document.getElementById("bucketRow" + (queueIndex + 1));
+      bucketRow.innerHTML = "";
+      for (let j = 0; j < 3; j++) {
+        const bucketObj = createBucket(queueIndex, j);
+        queuesData[queueIndex].push(bucketObj);
+        bucketRow.appendChild(bucketObj.container);
+      }
+    }
+    
+    /*******************************************************
+     * 3) Job Generation
+     *******************************************************/
+    let jobTimer = null;
+    function scheduleNextJob() {
+      if (!isPaused) generateWorkflowPart();
+      jobTimer = setTimeout(scheduleNextJob, jobFrequency);
+    }
+    
+    function generateWorkflowPart() {
+      console.log("Generating workflow part");
+      const part = document.createElement('div');
+      part.classList.add('workflow-part');
+      let letter = getRandomLetter();
+      part.innerText = letter;
+      
+      const progress = document.createElement('div');
+      progress.classList.add('progress');
+      part.appendChild(progress);
+      workflowEl.appendChild(part);
+      
+      let progressVal = 0;
+      const progInterval = setInterval(() => {
+        if (isPaused) return;
+        progressVal += Math.random() * 10 * speedFactor;
+        progress.style.width = `${Math.min(progressVal, 100)}%`;
+        if (progressVal >= 100) {
+          clearInterval(progInterval);
+          let queueIndex = Math.floor(Math.random() * nestQueueCount);
+          flyToNestQueue(queueIndex, part, letter);
+        }
+      }, 200);
+    }
+    function getRandomLetter() {
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      return letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    
+    /*******************************************************
+     * 4) Animation into Buckets
+     *******************************************************/
+    function flyToNestQueue(queueIndex, part, letter) {
+      if(queueRecalc[queueIndex]) {
+        const overlay = recalcOverlayRefs[queueIndex];
+        if(overlay) {
+          animateMoveToCenter(part, overlay, () => {
+            pendingParts[queueIndex].push(letter);
+            part.remove();
+          });
+        } else {
+          pendingParts[queueIndex].push(letter);
+          part.remove();
+        }
+        return;
+      }
+      
+      let targetBucketEl = queuesData[queueIndex][0].el;
+      const startRect = part.getBoundingClientRect();
+      const targetRect = targetBucketEl.getBoundingClientRect();
+      const targetX = targetRect.left + targetRect.width / 2;
+      const targetY = targetRect.top + targetRect.height / 2;
+      
+      const clone = part.cloneNode(true);
+      document.body.appendChild(clone);
+      clone.style.position = 'fixed';
+      clone.style.left = `${startRect.left}px`;
+      clone.style.top = `${startRect.top}px`;
+      clone.style.margin = '0';
+      clone.getBoundingClientRect();
+      
+      setTimeout(() => {
+        const duration = 900;
+        clone.style.transition = `transform ${duration}ms ease-in-out, opacity ${duration}ms ease-in-out`;
+        clone.style.zIndex = 999;
+        const dx = targetX - (startRect.left + startRect.width / 2);
+        const dy = targetY - (startRect.top + startRect.height / 2);
+        clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.5) rotate(540deg)`;
+        clone.style.opacity = '0.3';
+        setTimeout(() => {
+          clone.remove();
+          part.remove();
+          queuesData[queueIndex].forEach((bucket) => {
+            const bucketPart = document.createElement('div');
+            bucketPart.classList.add('part');
+            bucketPart.innerText = letter;
+            bucket.el.appendChild(bucketPart);
+            let randomVariation = Math.random() * 0.5 + 0.75;
+            let increment = bucket.fillFactor * randomVariation;
+            bucket.efficiency += increment;
+            bucket.fill.style.width = Math.min(bucket.efficiency, 100) + '%';
+          });
+          checkBuckets(queueIndex);
+        }, duration);
+      }, 50);
+    }
+    
+    function checkBuckets(queueIndex) {
+      if (queueRecalc[queueIndex]) return;
+      const triggeredBucket = queuesData[queueIndex].find(b => b.efficiency >= 100);
+      if (triggeredBucket) {
+        queueRecalc[queueIndex] = true;
+        const tick = document.createElement('div');
+        tick.classList.add('trigger-tick');
+        tick.innerText = '✔';
+        triggeredBucket.el.appendChild(tick);
+        
+        const message = document.createElement('div');
+        message.classList.add('trigger-message');
+        message.innerText = 'Criteria Met!';
+        triggeredBucket.el.appendChild(message);
+        
+        setTimeout(() => {
+          if (!isPaused) animateBucketToRIP(triggeredBucket, queueIndex);
+        }, 600);
+      }
+    }
+    
+    function animateBucketToRIP(bucketObj, queueIndex) {
+      const bucketRect = bucketObj.el.getBoundingClientRect();
+      const ripRect = document.getElementById('rip').getBoundingClientRect();
+      const targetX = ripRect.left + ripRect.width / 2;
+      const targetY = ripRect.top + ripRect.height / 2;
+      
+      const bucketClone = bucketObj.el.cloneNode(true);
+      document.body.appendChild(bucketClone);
+      bucketClone.style.position = 'fixed';
+      bucketClone.style.left = `${bucketRect.left}px`;
+      bucketClone.style.top = `${bucketRect.top}px`;
+      bucketClone.style.width = `${bucketRect.width}px`;
+      bucketClone.style.height = `${bucketRect.height}px`;
+      bucketClone.style.margin = '0';
+      bucketClone.style.zIndex = 9999;
+      bucketClone.getBoundingClientRect();
+      
+      setTimeout(() => {
+        const duration = 1200;
+        bucketClone.style.transition = `transform ${duration}ms ease-in-out, opacity ${duration}ms ease-in-out`;
+        const dx = targetX - (bucketRect.left + bucketRect.width / 2);
+        const dy = targetY - (bucketRect.top + bucketRect.height / 2);
+        bucketClone.style.transform = `translate(${dx}px, ${dy}px) scale(0.5) rotate(720deg)`;
+        bucketClone.style.opacity = '0.3';
+        setTimeout(() => {
+          bucketClone.remove();
+          resetQueue(queueIndex);
+          addJobToRIP();
+        }, duration);
+      }, 50);
+    }
+    
+    /*******************************************************
+     * 5) Recalculation Logic
+     *******************************************************/
+    function animateMoveToCenter(element, overlay, callback) {
+      const startRect = element.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      const targetX = overlayRect.left + overlayRect.width / 2;
+      const targetY = overlayRect.top + overlayRect.height / 2;
+      const elementCenterX = startRect.left + startRect.width / 2;
+      const elementCenterY = startRect.top + startRect.height / 2;
+      const dx = targetX - elementCenterX;
+      const dy = targetY - elementCenterY;
+      element.style.position = 'fixed';
+      element.style.left = `${startRect.left}px`;
+      element.style.top = `${startRect.top}px`;
+      element.getBoundingClientRect();
+      const duration = 700;
+      element.style.transition = `transform ${duration}ms ease-in-out, opacity ${duration}ms ease-in-out`;
+      element.style.transform = `translate(${dx}px, ${dy}px)`;
+      element.style.opacity = '0.3';
+      let called = false;
+      function finish() {
+        if (called) return;
+        called = true;
+        element.style.transition = '';
+        element.style.transform = '';
+        element.style.opacity = '1';
+        if (callback) callback();
+      }
+      element.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'transform') {
+          element.removeEventListener('transitionend', handler);
+          finish();
+        }
+      });
+      setTimeout(finish, duration + 100);
+    }
+    
+    function movePartsToOverlay(queueIndex, overlay) {
+      return new Promise(resolve => {
+        let holdingParts = [];
+        let animations = [];
+        queuesData[queueIndex].forEach(bucket => {
+          const parts = Array.from(bucket.el.querySelectorAll('.part'));
+          parts.forEach(part => {
+            animations.push(new Promise(animResolve => {
+              animateMoveToCenter(part, overlay, () => {
+                holdingParts.push(part.innerText);
+                part.remove();
+                animResolve();
+              });
+            }));
+          });
+        });
+        Promise.all(animations).then(() => {
+          queuesData[queueIndex].forEach(bucket => {
+            bucket.el.innerHTML = "";
+            bucket.efficiency = 0;
+            bucket.fill.style.width = '0%';
+          });
+          resolve(holdingParts);
+        });
+      });
+    }
+    
+    function movePartsBackToBuckets(queueIndex, overlay, lettersArray) {
+      return new Promise(resolve => {
+        const combinedParts = lettersArray.concat(pendingParts[queueIndex]);
+        pendingParts[queueIndex] = [];
+        
+        let shuffled = combinedParts.slice();
+        shuffleArray(shuffled);
+        
+        let retainedCount = shuffled.length > 0 ? Math.max(1, Math.floor(shuffled.length * 0.1)) : 0;
+        let lettersToDistribute = shuffled.slice(0, retainedCount);
+        
+        let uniqueLetters = Array.from(new Set(lettersToDistribute));
+        let animations = [];
+        uniqueLetters.forEach(letter => {
+          const newPart = document.createElement('div');
+          newPart.classList.add('part');
+          newPart.innerText = letter;
+          overlay.appendChild(newPart);
+          const firstBucketEl = queuesData[queueIndex][0].el;
+          animations.push(new Promise(animResolve => {
+            animateMove(newPart, firstBucketEl, () => {
+              newPart.remove();
+              queuesData[queueIndex].forEach((bucket) => {
+                const bucketPart = document.createElement('div');
+                bucketPart.classList.add('part');
+                bucketPart.innerText = letter;
+                bucket.el.appendChild(bucketPart);
+                let randomVariation = Math.random() * 0.5 + 0.75;
+                let increment = bucket.fillFactor * randomVariation;
+                bucket.efficiency += increment;
+                bucket.fill.style.width = Math.min(bucket.efficiency, 100) + '%';
+              });
+              animResolve();
+            });
+          }));
+        });
+        Promise.all(animations).then(() => {
+          overlay.innerHTML = "";
+          resolve();
+        });
+      });
+    }
+    
+    function animateMove(element, targetContainer, callback) {
+      const startRect = element.getBoundingClientRect();
+      const targetRect = targetContainer.getBoundingClientRect();
+      const targetX = targetRect.left + targetRect.width / 2;
+      const targetY = targetRect.top + targetRect.height / 2;
+      const elementCenterX = startRect.left + startRect.width / 2;
+      const elementCenterY = startRect.top + startRect.height / 2;
+      const dx = targetX - elementCenterX;
+      const dy = targetY - elementCenterY;
+      element.style.position = 'fixed';
+      element.style.left = `${startRect.left}px`;
+      element.style.top = `${startRect.top}px`;
+      element.getBoundingClientRect();
+      const duration = 500;
+      element.style.transition = `transform ${duration}ms ease-in-out, opacity ${duration}ms ease-in-out`;
+      element.style.transform = `translate(${dx}px, ${dy}px)`;
+      element.style.opacity = '0.3';
+      let called = false;
+      function finish() {
+        if (called) return;
+        called = true;
+        element.style.transition = '';
+        element.style.transform = '';
+        element.style.opacity = '1';
+        targetContainer.appendChild(element);
+        element.style.position = '';
+        element.style.left = '';
+        element.style.top = '';
+        if (callback) callback();
+      }
+      element.addEventListener('transitionend', function handler(e) {
+        if (e.propertyName === 'transform') {
+          element.removeEventListener('transitionend', handler);
+          finish();
+        }
+      });
+      setTimeout(finish, duration + 100);
+    }
+    
+    function resetQueue(queueIndex) {
+      const nestQueueEl = document.getElementById('queue' + (queueIndex + 1));
+      const recalcOverlay = document.createElement('div');
+      recalcOverlay.classList.add('recalc-overlay');
+      recalcOverlay.innerHTML = 'Recalculating... <span class="hourglass">⌛</span>';
+      nestQueueEl.style.position = 'relative';
+      nestQueueEl.appendChild(recalcOverlay);
+      recalcOverlayRefs[queueIndex] = recalcOverlay;
+      
+      movePartsToOverlay(queueIndex, recalcOverlay).then(holdingParts => {
+        setTimeout(() => {
+          movePartsBackToBuckets(queueIndex, recalcOverlay, holdingParts).then(() => {
+            recalcOverlay.remove();
+            recalcOverlayRefs[queueIndex] = null;
+            queueRecalc[queueIndex] = false;
+          });
+        }, 5000);
+      });
+    }
+    
+    /*******************************************************
+     * 6) RIP & Printer Logic
+     *******************************************************/
+    function addJobToRIP() {
+      const jobName = "Job " + (jobCounter++);
+      ripQueue.push({ name: jobName, status: "Waiting" });
+      updateRIPList();
+      tryToStartPrinting();
+    }
+    function updateRIPList() {
+      ripListEl.innerHTML = "";
+      ripQueue.forEach((job, i) => {
+        const li = document.createElement('li');
+        li.id = "ripJob" + i;
+        li.textContent = job.name + " (" + job.status + ")";
+        ripListEl.appendChild(li);
+      });
+    }
+    function tryToStartPrinting() {
+      if (isPaused) return;
+      const waitingJob = ripQueue.find(j => j.status === "Waiting");
+      if (!waitingJob) return;
+      const freePrinter = printers.find(p => !p.busy);
+      if (!freePrinter) return;
+      waitingJob.status = "Printing";
+      updateRIPList();
+      freePrinter.busy = true;
+      freePrinter.progress = 0;
+      freePrinter.jobId = waitingJob.name;
+      const printInterval = setInterval(() => {
+        if (isPaused) return;
+        freePrinter.progress += Math.random() * 1.5 * speedFactor * 0.5;
+        freePrinter.fillEl.style.width = Math.min(freePrinter.progress, 100) + '%';
+        if (freePrinter.progress >= 100) {
+          clearInterval(printInterval);
+          freePrinter.busy = false;
+          freePrinter.progress = 0;
+          freePrinter.fillEl.style.width = '0%';
+          ripQueue = ripQueue.filter(j => j.name !== waitingJob.name);
+          updateRIPList();
+          freePrinter.jobId = null;
+          tryToStartPrinting();
+        }
+      }, 200);
+    }
+    
+    // Helper: Fisher–Yates shuffle
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+    
+    /*******************************************************
+     * 7) Overlay & Printer Controls
+     *******************************************************/
+    const seeDataFlowButton = document.getElementById('seeDataFlowButton');
+    const dataFlowOverlay = document.getElementById('dataFlowOverlay');
+    const closeOverlayButton = document.getElementById('closeOverlay');
+
+    seeDataFlowButton.addEventListener('click', () => {
+      dataFlowOverlay.style.display = 'flex';
+    });
+
+    closeOverlayButton.addEventListener('click', () => {
+      dataFlowOverlay.style.display = 'none';
+    });
+    
+    // Printer Add/Remove Controls
+    const addPrinterButton = document.getElementById('addPrinterButton');
+    const removePrinterButton = document.getElementById('removePrinterButton');
+
+    addPrinterButton.addEventListener('click', () => {
+      addPrinter();
+    });
+    removePrinterButton.addEventListener('click', () => {
+      removePrinter();
+    });
+    
+    function addPrinter() {
+      printerCount++;
+      const printerContainer = document.getElementById('printers');
+      const printerDiv = document.createElement('div');
+      printerDiv.classList.add('printer-stage');
+      printerDiv.id = 'printer' + printerCount;
+      
+      const img = document.createElement('img');
+      img.classList.add('printer-icon');
+      img.src = "https://cdn-icons-png.flaticon.com/512/190/190411.png";
+      img.alt = "Printer " + printerCount;
+      printerDiv.appendChild(img);
+      
+      const h3 = document.createElement('h3');
+      h3.textContent = "Printer " + printerCount;
+      printerDiv.appendChild(h3);
+      
+      const progressDiv = document.createElement('div');
+      progressDiv.classList.add('printer-progress');
+      const fillDiv = document.createElement('div');
+      fillDiv.classList.add('printer-fill');
+      fillDiv.id = 'printerFill' + printerCount;
+      progressDiv.appendChild(fillDiv);
+      printerDiv.appendChild(progressDiv);
+      
+      printerContainer.appendChild(printerDiv);
+      printers.push({ el: printerDiv, fillEl: fillDiv, busy: false, progress: 0, jobId: null });
+      tryToStartPrinting();
+    }
+    
+    function removePrinter() {
+      if (printerCount > 1) {
+        const printerContainer = document.getElementById('printers');
+        const lastPrinter = document.getElementById('printer' + printerCount);
+        if(lastPrinter) {
+          printerContainer.removeChild(lastPrinter);
+          printers.pop();
+          printerCount--;
+        }
+      }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      initNestQueues();
+      initBuckets();
+      scheduleNextJob();
+      printerCount = 3;
+      printers = [];
+      for(let i = 1; i <= printerCount; i++){
+        let printerEl = document.getElementById('printer' + i);
+        let fillEl = document.getElementById('printerFill' + i);
+        printers.push({ el: printerEl, fillEl: fillEl, busy: false, progress: 0, jobId: null });
+      }
+    });
+  </script>
+</body>
+</html>
